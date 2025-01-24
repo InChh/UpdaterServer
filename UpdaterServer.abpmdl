@@ -1,0 +1,76 @@
+{
+  "template": "app",
+  "imports": {
+    "Volo.Abp.LeptonXLiteTheme": {
+      "version": "4.0.5",
+      "isInstalled": true
+    },
+    "Volo.Abp.Account": {
+      "version": "9.0.4",
+      "isInstalled": true
+    },
+    "Volo.Abp.OpenIddict": {
+      "version": "9.0.4",
+      "isInstalled": true
+    },
+    "Volo.Abp.Identity": {
+      "version": "9.0.4",
+      "isInstalled": true
+    },
+    "Volo.Abp.SettingManagement": {
+      "version": "9.0.4",
+      "isInstalled": true
+    },
+    "Volo.Abp.PermissionManagement": {
+      "version": "9.0.4",
+      "isInstalled": true
+    },
+    "Volo.Abp.FeatureManagement": {
+      "version": "9.0.4",
+      "isInstalled": true
+    }
+  },
+  "folders": {
+    "items": {
+      "src": {}
+    }
+  },
+  "packages": {
+    "UpdaterServer.Application": {
+      "path": "src/UpdaterServer.Application/UpdaterServer.Application.abppkg",
+      "folder": "src"
+    },
+    "UpdaterServer.Domain.Shared": {
+      "path": "src/UpdaterServer.Domain.Shared/UpdaterServer.Domain.Shared.abppkg",
+      "folder": "src"
+    },
+    "UpdaterServer.Application.Contracts": {
+      "path": "src/UpdaterServer.Application.Contracts/UpdaterServer.Application.Contracts.abppkg",
+      "folder": "src"
+    },
+    "UpdaterServer.HttpApi": {
+      "path": "src/UpdaterServer.HttpApi/UpdaterServer.HttpApi.abppkg",
+      "folder": "src"
+    },
+    "UpdaterServer.HttpApi.Client": {
+      "path": "src/UpdaterServer.HttpApi.Client/UpdaterServer.HttpApi.Client.abppkg",
+      "folder": "src"
+    },
+    "UpdaterServer.EntityFrameworkCore": {
+      "path": "src/UpdaterServer.EntityFrameworkCore/UpdaterServer.EntityFrameworkCore.abppkg",
+      "folder": "src"
+    },
+    "UpdaterServer.DbMigrator": {
+      "path": "src/UpdaterServer.DbMigrator/UpdaterServer.DbMigrator.abppkg",
+      "folder": "src"
+    },
+    "UpdaterServer.HttpApi.Host": {
+      "path": "src/UpdaterServer.HttpApi.Host/UpdaterServer.HttpApi.Host.abppkg",
+      "folder": "src"
+    },
+    "UpdaterServer.Domain": {
+      "path": "src/UpdaterServer.Domain/UpdaterServer.Domain.abppkg",
+      "folder": "src"
+    }
+  }
+}

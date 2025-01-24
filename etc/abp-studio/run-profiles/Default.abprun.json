@@ -1,0 +1,13 @@
+﻿{
+  "applications": {
+    "UpdaterServer.HttpApi.Host": {
+      "type": "dotnet-project",
+      "launchUrl": "https://localhost:44392",
+      "path": "../../../src/UpdaterServer.HttpApi.Host/UpdaterServer.HttpApi.Host.csproj",
+      "kubernetesService": ".*-httpapihost$",
+      "execution": {
+        "order": 4
+      }
+    }
+  }
+}
