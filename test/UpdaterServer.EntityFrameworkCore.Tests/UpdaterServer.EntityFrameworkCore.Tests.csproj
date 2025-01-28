@@ -1,0 +1,22 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <Import Project="..\..\common.props" />
+
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <RootNamespace>UpdaterServer</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Volo.Abp.EntityFrameworkCore.Sqlite" Version="9.0.4" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.12.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\UpdaterServer.EntityFrameworkCore\UpdaterServer.EntityFrameworkCore.csproj" />
+    <ProjectReference Include="..\UpdaterServer.Application.Tests\UpdaterServer.Application.Tests.csproj" />
+    <ProjectReference Include="..\UpdaterServer.Domain.Tests\UpdaterServer.Domain.Tests.csproj" />
+  </ItemGroup>
+
+</Project>

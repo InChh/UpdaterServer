@@ -37,6 +37,11 @@
     "Unspecified": "System",
     "SeeAllUsers": "查看所有用户",
     "TakePhoto": "拍摄照片",
-    "ChoosePhoto": "选择照片"
+    "ChoosePhoto": "选择照片",
+    "App:1001": "名为 {name} 的应用程序已存在",
+    "App:2001": "找不到名为 {name} 的应用程序",
+    "App:2002": "版本{versionNumber}({applicationName})已存在",
+    "App:2003": "非法版本号：{versionNumber}",
+    "App:2004": "提供的版本号({versionNumber})比当前应用最新的版本号({newestVersionNumber})更老"
   }
 }

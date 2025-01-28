@@ -32,7 +32,8 @@
   },
   "folders": {
     "items": {
-      "src": {}
+      "src": {},
+      "test": {}
     }
   },
   "packages": {

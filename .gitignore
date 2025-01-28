@@ -265,6 +265,7 @@ src/UpdaterServer.HttpApi.Host/Logs/*
 src/UpdaterServer.DbMigrator/Logs/*
 src/UpdaterServer.Blazor.Server/Logs/*
 src/UpdaterServer.Blazor.Server.Tiered/Logs/*
+*.secrets.json
 
 # Use abp install-libs to restore.
 **/wwwroot/libs/*

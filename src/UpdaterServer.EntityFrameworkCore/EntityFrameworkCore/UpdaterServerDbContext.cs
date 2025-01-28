@@ -1,4 +1,6 @@
 using Microsoft.EntityFrameworkCore;
+using UpdaterServer.Application;
+using UpdaterServer.ApplicationVersion;
 using Volo.Abp.AuditLogging.EntityFrameworkCore;
 using Volo.Abp.BackgroundJobs.EntityFrameworkCore;
 using Volo.Abp.BlobStoring.Database.EntityFrameworkCore;
@@ -17,16 +19,18 @@ namespace UpdaterServer.EntityFrameworkCore;
 
 [ReplaceDbContext(typeof(IIdentityDbContext))]
 [ConnectionStringName("Default")]
-public class UpdaterServerDbContext :
-    AbpDbContext<UpdaterServerDbContext>,
+public class UpdaterServerDbContext(DbContextOptions<UpdaterServerDbContext> options) :
+    AbpDbContext<UpdaterServerDbContext>(options),
     IIdentityDbContext
 {
     /* Add DbSet properties for your Aggregate Roots / Entities here. */
+    public DbSet<Application.Application> Applications { get; set; }
+    public DbSet<ApplicationVersion.ApplicationVersion> ApplicationVersions { get; set; }
 
 
     #region Entities from the modules
 
-    /* Notice: We only implemented IIdentityProDbContext 
+    /* Notice: We only implemented IIdentityProDbContext
      * and replaced them for this DbContext. This allows you to perform JOIN
      * queries for the entities of these modules over the repositories easily. You
      * typically don't need that for other modules. But, if you need, you can
@@ -49,12 +53,6 @@ public class UpdaterServerDbContext :
 
     #endregion
 
-    public UpdaterServerDbContext(DbContextOptions<UpdaterServerDbContext> options)
-        : base(options)
-    {
-
-    }
-
     protected override void OnModelCreating(ModelBuilder builder)
     {
         base.OnModelCreating(builder);
@@ -69,7 +67,7 @@ public class UpdaterServerDbContext :
         builder.ConfigureIdentity();
         builder.ConfigureOpenIddict();
         builder.ConfigureBlobStoring();
-        
+
         /* Configure your own tables/entities inside here */
 
         //builder.Entity<YourEntity>(b =>
@@ -78,5 +76,31 @@ public class UpdaterServerDbContext :
         //    b.ConfigureByConvention(); //auto configure for the base class props
         //    //...
         //});
+
+        #region Application
+
+        builder.Entity<Application.Application>(b =>
+        {
+            b.ToTable(UpdaterServerConsts.DbTablePrefix + "Applications", UpdaterServerConsts.DbSchema);
+            b.ConfigureByConvention();
+            b.Property(x => x.Name).IsRequired().HasMaxLength(ApplicationConsts.MaxNameLength);
+            b.Property(x => x.Description).HasMaxLength(ApplicationConsts.MaxDescriptionLength);
+        });
+
+        #endregion
+
+        #region ApplicationVersion
+
+        builder.Entity<ApplicationVersion.ApplicationVersion>(b =>
+        {
+            b.ToTable(UpdaterServerConsts.DbTablePrefix + "ApplicationVersions", UpdaterServerConsts.DbSchema);
+            b.ConfigureByConvention();
+            b.Property(x => x.VersionNumber).IsRequired().HasMaxLength(ApplicationVersionConsts.MaxVersionNumberLength);
+            b.Property(x => x.Description).HasMaxLength(ApplicationVersionConsts.MaxDescriptionLength);
+            b.HasOne<Application.Application>().WithMany().HasForeignKey(x => x.ApplicationId).IsRequired();
+            b.Property(x => x.IsActive).IsRequired();
+        });
+
+        #endregion
     }
 }
