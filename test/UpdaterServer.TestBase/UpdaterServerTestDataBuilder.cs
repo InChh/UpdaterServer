@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using Volo.Abp.Data;
 using Volo.Abp.DependencyInjection;
@@ -43,13 +44,12 @@ public class UpdaterServerTestDataSeedContributor : IDataSeedContributor, ITrans
         {
             for (var i = 1; i <= 12; i++)
             {
-                for (var j = 1; j <= 10; j++)
-                {
-                    var versionNumber = $"2025.{i}.{j}";
-                    await _versionRepository.InsertAsync(
-                        new ApplicationVersion.ApplicationVersion(_guidGenerator.Create(), application.Id, versionNumber,
-                            $"Test version {versionNumber}"));
-                }
+                var year = DateTime.Now.Year;
+                var month = DateTime.Now.Month;
+                var versionNumber = $"{year}.{month}.{i}";
+                await _versionRepository.InsertAsync(
+                    new ApplicationVersion.ApplicationVersion(_guidGenerator.Create(), application.Id, versionNumber,
+                        $"Test version {versionNumber}"));
             }
         }
     }

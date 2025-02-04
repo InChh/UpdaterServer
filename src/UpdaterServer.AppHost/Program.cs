@@ -3,7 +3,7 @@ using Microsoft.Extensions.Hosting;
 var builder = DistributedApplication.CreateBuilder(args);
 var postgres = builder
     .AddPostgres("UpdaterDb")
-    .WithVolume("UpdaterDb")
+    .WithVolume("/UpdaterDb")
     .AddDatabase("Updater");
 
 var redis = builder.AddRedis("redis");

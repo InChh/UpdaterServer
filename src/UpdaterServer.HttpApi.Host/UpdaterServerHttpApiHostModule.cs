@@ -33,6 +33,7 @@ using Volo.Abp.AspNetCore.Mvc.UI.Theme.LeptonXLite;
 using Volo.Abp.AspNetCore.Mvc.UI.Theme.LeptonXLite.Bundling;
 using Microsoft.AspNetCore.Hosting;
 using UpdaterServer.HealthChecks;
+using Volo.Abp.AspNetCore.Mvc.Libs;
 using Volo.Abp.AspNetCore.Serilog;
 using Volo.Abp.Identity;
 using Volo.Abp.OpenIddict;
@@ -53,14 +54,14 @@ namespace UpdaterServer;
     typeof(AbpAccountWebOpenIddictModule),
     typeof(AbpSwashbuckleModule),
     typeof(AbpAspNetCoreSerilogModule)
-    )]
+)]
 public class UpdaterServerHttpApiHostModule : AbpModule
 {
     public override void PreConfigureServices(ServiceConfigurationContext context)
     {
         var hostingEnvironment = context.Services.GetHostingEnvironment();
         var configuration = context.Services.GetConfiguration();
-        
+
         configuration["Redis:Configuration"] = configuration["ConnectionStrings:Redis"];
 
         PreConfigure<OpenIddictBuilder>(builder =>
@@ -82,7 +83,8 @@ public class UpdaterServerHttpApiHostModule : AbpModule
 
             PreConfigure<OpenIddictServerBuilder>(serverBuilder =>
             {
-                serverBuilder.AddProductionEncryptionAndSigningCertificate("openiddict.pfx", configuration["AuthServer:CertificatePassPhrase"]!);
+                serverBuilder.AddProductionEncryptionAndSigningCertificate("openiddict.pfx",
+                    configuration["AuthServer:CertificatePassPhrase"]!);
                 serverBuilder.SetIssuer(new Uri(configuration["AuthServer:Authority"]!));
             });
         }
@@ -105,12 +107,14 @@ public class UpdaterServerHttpApiHostModule : AbpModule
             {
                 options.DisableTransportSecurityRequirement = true;
             });
-            
+
             Configure<ForwardedHeadersOptions>(options =>
             {
                 options.ForwardedHeaders = ForwardedHeaders.XForwardedProto;
             });
         }
+
+        Configure<AbpMvcLibsOptions>(options => { options.CheckLibs = false; });
 
         ConfigureAuthentication(context);
         ConfigureUrls(configuration);
@@ -123,7 +127,8 @@ public class UpdaterServerHttpApiHostModule : AbpModule
 
     private void ConfigureAuthentication(ServiceConfigurationContext context)
     {
-        context.Services.ForwardIdentityAuthenticationForBearer(OpenIddictValidationAspNetCoreDefaults.AuthenticationScheme);
+        context.Services.ForwardIdentityAuthenticationForBearer(OpenIddictValidationAspNetCoreDefaults
+            .AuthenticationScheme);
         context.Services.Configure<AbpClaimsPrincipalFactoryOptions>(options =>
         {
             options.IsDynamicClaimsEnabled = true;
@@ -135,7 +140,8 @@ public class UpdaterServerHttpApiHostModule : AbpModule
         Configure<AppUrlOptions>(options =>
         {
             options.Applications["MVC"].RootUrl = configuration["App:SelfUrl"];
-            options.RedirectAllowedUrls.AddRange(configuration["App:RedirectAllowedUrls"]?.Split(',') ?? Array.Empty<string>());
+            options.RedirectAllowedUrls.AddRange(configuration["App:RedirectAllowedUrls"]?.Split(',') ??
+                                                 Array.Empty<string>());
         });
     }
 
@@ -163,10 +169,18 @@ public class UpdaterServerHttpApiHostModule : AbpModule
         {
             Configure<AbpVirtualFileSystemOptions>(options =>
             {
-                options.FileSets.ReplaceEmbeddedByPhysical<UpdaterServerDomainSharedModule>(Path.Combine(hostingEnvironment.ContentRootPath, $"..{Path.DirectorySeparatorChar}UpdaterServer.Domain.Shared"));
-                options.FileSets.ReplaceEmbeddedByPhysical<UpdaterServerDomainModule>(Path.Combine(hostingEnvironment.ContentRootPath, $"..{Path.DirectorySeparatorChar}UpdaterServer.Domain"));
-                options.FileSets.ReplaceEmbeddedByPhysical<UpdaterServerApplicationContractsModule>(Path.Combine(hostingEnvironment.ContentRootPath, $"..{Path.DirectorySeparatorChar}UpdaterServer.Application.Contracts"));
-                options.FileSets.ReplaceEmbeddedByPhysical<UpdaterServerApplicationModule>(Path.Combine(hostingEnvironment.ContentRootPath, $"..{Path.DirectorySeparatorChar}UpdaterServer.Application"));
+                options.FileSets.ReplaceEmbeddedByPhysical<UpdaterServerDomainSharedModule>(
+                    Path.Combine(hostingEnvironment.ContentRootPath,
+                        $"..{Path.DirectorySeparatorChar}UpdaterServer.Domain.Shared"));
+                options.FileSets.ReplaceEmbeddedByPhysical<UpdaterServerDomainModule>(
+                    Path.Combine(hostingEnvironment.ContentRootPath,
+                        $"..{Path.DirectorySeparatorChar}UpdaterServer.Domain"));
+                options.FileSets.ReplaceEmbeddedByPhysical<UpdaterServerApplicationContractsModule>(
+                    Path.Combine(hostingEnvironment.ContentRootPath,
+                        $"..{Path.DirectorySeparatorChar}UpdaterServer.Application.Contracts"));
+                options.FileSets.ReplaceEmbeddedByPhysical<UpdaterServerApplicationModule>(
+                    Path.Combine(hostingEnvironment.ContentRootPath,
+                        $"..{Path.DirectorySeparatorChar}UpdaterServer.Application"));
             });
         }
     }
@@ -234,7 +248,7 @@ public class UpdaterServerHttpApiHostModule : AbpModule
         {
             app.UseErrorPage();
         }
-        
+
         app.MapAbpStaticAssets();
         app.UseAbpStudioLink();
         app.UseRouting();

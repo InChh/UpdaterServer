@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Linq;
 using System.Threading.Tasks;
 using Volo.Abp;
@@ -38,9 +39,9 @@ public class ApplicationVersionManager(
 
         // Check if the version number is the newest.
         var queryable = await versionRepository.GetQueryableAsync();
-        queryable = queryable.Where(v => v.ApplicationId == application.Id)
-            .OrderByDescending(v => v.VersionNumber);
-        var newest = await queryableExecuter.FirstOrDefaultAsync(queryable);
+        queryable = queryable.Where(v => v.ApplicationId == application.Id);
+        var versions = await queryableExecuter.ToListAsync(queryable);
+        var newest = versions.OrderBy(a => a.VersionNumber, new ApplicationVersionComparer()).LastOrDefault();
         if (newest is null)
         {
             return new ApplicationVersion(guidGenerator.Create(), application.Id, versionNumber, description);

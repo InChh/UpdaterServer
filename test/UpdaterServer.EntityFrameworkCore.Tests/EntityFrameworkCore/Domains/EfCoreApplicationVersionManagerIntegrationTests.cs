@@ -1,0 +1,8 @@
+﻿using UpdaterServer.ApplicationVersion;
+using Xunit.Abstractions;
+
+namespace UpdaterServer.EntityFrameworkCore.Domains;
+
+public class EfCoreApplicationVersionManagerIntegrationTests: ApplicationVersionManagerIntegrationTests<UpdaterServerEntityFrameworkCoreTestModule>
+{
+}
