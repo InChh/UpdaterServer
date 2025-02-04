@@ -33,8 +33,4 @@
     <Content Remove="Localization\UpdaterServer\*.json" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Folder Include="File\" />
-  </ItemGroup>
-
 </Project>

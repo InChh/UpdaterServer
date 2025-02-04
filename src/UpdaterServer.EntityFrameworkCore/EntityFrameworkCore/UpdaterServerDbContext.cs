@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using UpdaterServer.Application;
 using UpdaterServer.ApplicationVersion;
+using UpdaterServer.File;
 using Volo.Abp.AuditLogging.EntityFrameworkCore;
 using Volo.Abp.BackgroundJobs.EntityFrameworkCore;
 using Volo.Abp.BlobStoring.Database.EntityFrameworkCore;
@@ -26,6 +27,7 @@ public class UpdaterServerDbContext(DbContextOptions<UpdaterServerDbContext> opt
     /* Add DbSet properties for your Aggregate Roots / Entities here. */
     public DbSet<Application.Application> Applications { get; set; }
     public DbSet<ApplicationVersion.ApplicationVersion> ApplicationVersions { get; set; }
+    public DbSet<FileMetadata> FileMetadatas { get; set; }
 
 
     #region Entities from the modules
@@ -99,6 +101,35 @@ public class UpdaterServerDbContext(DbContextOptions<UpdaterServerDbContext> opt
             b.Property(x => x.Description).HasMaxLength(ApplicationVersionConsts.MaxDescriptionLength);
             b.HasOne<Application.Application>().WithMany().HasForeignKey(x => x.ApplicationId).IsRequired();
             b.Property(x => x.IsActive).IsRequired();
+            b.HasMany(x => x.Files).WithOne().HasForeignKey(x => x.VersionId).IsRequired();
+        });
+
+        #endregion
+
+        #region FileMetadata
+
+        builder.Entity<FileMetadata>(b =>
+        {
+            b.ToTable(UpdaterServerConsts.DbTablePrefix + "FileMetadatas", UpdaterServerConsts.DbSchema);
+            b.ConfigureByConvention();
+            b.Property(x => x.Path).IsRequired().HasMaxLength(FileMetadataConsts.MaxPathLength);
+            b.Property(x => x.Hash).IsRequired().HasMaxLength(FileMetadataConsts.MaxHashLength);
+            b.Property(x => x.Size).IsRequired();
+            b.Property(x => x.Url).IsRequired().HasMaxLength(FileMetadataConsts.MaxUrlLength);
+        });
+
+        #endregion
+
+        #region VersionFile
+
+        builder.Entity<VersionFile>(b =>
+        {
+            b.ToTable(UpdaterServerConsts.DbTablePrefix + "VersionFiles", UpdaterServerConsts.DbSchema);
+            b.ConfigureByConvention();
+            b.HasKey(x => new { x.VersionId, x.FileMetadataId });
+            b.HasOne<ApplicationVersion.ApplicationVersion>().WithMany().HasForeignKey(x => x.VersionId).IsRequired();
+            b.HasOne<FileMetadata>().WithMany().HasForeignKey(x => x.FileMetadataId).IsRequired();
+            b.HasIndex(x => new { x.VersionId, x.FileMetadataId });
         });
 
         #endregion
