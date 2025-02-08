@@ -2,6 +2,7 @@
 using System.Linq;
 using System.Threading.Tasks;
 using Shouldly;
+using UpdaterServer.File;
 using Volo.Abp;
 using Volo.Abp.Domain.Repositories;
 using Volo.Abp.Linq;
@@ -32,14 +33,14 @@ public class ApplicationVersionManagerIntegrationTests<TStartupModule> : Updater
         await WithUnitOfWorkAsync(async () =>
         {
             var app = await _applicationRepository.FirstAsync();
-            await _applicationVersionManager.CreateAsync(app, $"{year}.{month}.1", "Test version 1")
+            await _applicationVersionManager.CreateAsync(app, $"{year}.{month}.1", "Test version 1", [])
                 .ShouldThrowAsync<BusinessException>();
         });
 
         await WithUnitOfWorkAsync(async () =>
         {
             var app = await _applicationRepository.FirstAsync();
-            var v = await _applicationVersionManager.CreateAsync(app, $"{year}.{month}.13", "Test version 13");
+            var v = await _applicationVersionManager.CreateAsync(app, $"{year}.{month}.13", "Test version 13",[]);
             v.ApplicationId.ShouldBe(app.Id);
             v.VersionNumber.ShouldBe($"{year}.{month}.13");
         });

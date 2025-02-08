@@ -43,6 +43,8 @@
     "App:2002": "版本{versionNumber}已存在",
     "App:2003": "非法版本号：{versionNumber}",
     "App:2004": "提供的版本号({versionNumber})比当前应用最新的版本号({newestVersionNumber})更老",
-    "App:2005": "找不到文件: {missingFiles}"
+    "App:2005": "找不到文件: {missingFiles}",
+    "App:3001": "文件{path}({hash})已经存在",
+    "App:3002": "文件{path}({hash})在数据库中已存在但url不匹配"
   }
 }

@@ -77,6 +77,16 @@ public class ApplicationVersion : FullAuditedAggregateRoot<Guid>
         Files.Add(new VersionFile(Id, fileMetadataId));
     }
 
+    public void AddFiles(ICollection<Guid> fileMetadataIds)
+    {
+        Check.NotNullOrEmpty(fileMetadataIds, nameof(fileMetadataIds));
+
+        foreach (var fileMetadataId in fileMetadataIds)
+        {
+            AddFile(fileMetadataId);
+        }
+    }
+
     public void RemoveFile(Guid fileMetadataId)
     {
         Check.NotNull(fileMetadataId, nameof(fileMetadataId));

@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
+using UpdaterServer.File;
 using Volo.Abp.Data;
 using Volo.Abp.DependencyInjection;
 using Volo.Abp.Domain.Repositories;
@@ -8,48 +10,67 @@ using Volo.Abp.Guids;
 
 namespace UpdaterServer;
 
-public class UpdaterServerTestDataSeedContributor : IDataSeedContributor, ITransientDependency
+public class UpdaterServerTestDataSeedContributor(
+    IGuidGenerator guidGenerator,
+    IRepository<Application.Application> applicationRepository,
+    IRepository<ApplicationVersion.ApplicationVersion> versionRepository,
+    IRepository<FileMetadata> fileMetadataRepository)
+    : IDataSeedContributor, ITransientDependency
 {
-    private readonly IGuidGenerator _guidGenerator;
-    private readonly IRepository<Application.Application> _applicationRepository;
-    private readonly IRepository<ApplicationVersion.ApplicationVersion> _versionRepository;
-
-    public UpdaterServerTestDataSeedContributor(IGuidGenerator guidGenerator,
-        IRepository<Application.Application> applicationRepository,
-        IRepository<ApplicationVersion.ApplicationVersion> versionRepository)
-    {
-        _guidGenerator = guidGenerator;
-        _applicationRepository = applicationRepository;
-        _versionRepository = versionRepository;
-    }
-
     public async Task SeedAsync(DataSeedContext context)
     {
         /* Seed additional test data... */
 
-        var app1 = await _applicationRepository.InsertAsync(
-            new Application.Application(_guidGenerator.Create(), "TestApp1", "Test Application 1"));
+        var apps =
+            await Task.WhenAll(
+                Enumerable.Range(0, UpdaterServerTestConsts.TestApplicationCount)
+                    .Select(async i => await applicationRepository.InsertAsync(
+                        new Application.Application(
+                            guidGenerator.Create(),
+                            $"TestApp{i + 1}",
+                            $"Test Application {i + 1}"
+                        )))
+                    .ToList()
+            );
 
-        var app2 = await _applicationRepository.InsertAsync(
-            new Application.Application(_guidGenerator.Create(), "TestApp2", "Test Application 2"));
-
-        var app3 = await _applicationRepository.InsertAsync(
-            new Application.Application(_guidGenerator.Create(), "TestApp3", "Test Application 3"));
-
-        var app4 = await _applicationRepository.InsertAsync(
-            new Application.Application(_guidGenerator.Create(), "TestApp4", "Test Application 4"));
-        List<Application.Application> apps = [app1, app2, app3, app4];
-
-        foreach (var application in apps)
+        var fileMetadatas = new List<FileMetadata>();
+        for (var i = 0; i < UpdaterServerTestConsts.TestFileMetadataCount; i++)
         {
-            for (var i = 1; i <= 12; i++)
+            var fileMetadata = new FileMetadata(
+                guidGenerator.Create(),
+                $"TestFile{i + 1}",
+                $"TestFile{i + 1} Hash",
+                1024,
+                $"https://test.com/TestFile{i + 1}"
+            );
+            fileMetadatas.Add(await fileMetadataRepository.InsertAsync(fileMetadata));
+        }
+
+
+        foreach (var app in apps)
+        {
+            for (var i = 0; i < UpdaterServerTestConsts.TestApplicationVersionCount; i++)
             {
                 var year = DateTime.Now.Year;
                 var month = DateTime.Now.Month;
-                var versionNumber = $"{year}.{month}.{i}";
-                await _versionRepository.InsertAsync(
-                    new ApplicationVersion.ApplicationVersion(_guidGenerator.Create(), application.Id, versionNumber,
-                        $"Test version {versionNumber}"));
+                var versionNumber = $"{year}.{month}.{i + 1}";
+                var applicationVersion = new ApplicationVersion.ApplicationVersion(guidGenerator.Create(), app.Id,
+                    versionNumber,
+                    $"Test version {versionNumber}");
+                if (i % 2 == 0)
+                {
+                    applicationVersion.AddFiles(fileMetadatas.Select(metadata => metadata.Id).ToArray());
+                }
+                else
+                {
+                    applicationVersion.AddFiles(
+                        fileMetadatas
+                            .Skip(UpdaterServerTestConsts.TestFileMetadataCount / 2)
+                            .Select(m => m.Id)
+                            .ToArray());
+                }
+
+                await versionRepository.InsertAsync(applicationVersion);
             }
         }
     }

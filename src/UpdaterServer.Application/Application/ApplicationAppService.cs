@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Linq.Dynamic.Core;
 using System.Threading.Tasks;
 using Volo.Abp.Application.Dtos;
 using Volo.Abp.Application.Services;
@@ -48,7 +49,12 @@ public class ApplicationAppService(
 
         if (!input.Filter.IsNullOrWhiteSpace())
         {
-            query = query.Where(a => a.Name.Contains(input.Filter) || a.Description.Contains(input.Filter));
+            query = query.Where(a => a.Name.Contains(input.Filter));
+        }
+
+        if (!input.Sorting.IsNullOrWhiteSpace())
+        {
+            query = query.OrderBy(input.Sorting);
         }
 
         var totalCount = await AsyncExecuter.CountAsync(query);

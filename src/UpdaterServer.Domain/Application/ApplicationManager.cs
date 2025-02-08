@@ -10,7 +10,7 @@ namespace UpdaterServer.Application;
 public class ApplicationManager(IGuidGenerator guidGenerator, IRepository<Application> applicationRepository)
     : DomainService
 {
-    public async Task<Application> CreateAsync(string name, string description)
+    public async Task<Application> CreateAsync(string name, string? description)
     {
         var c = await applicationRepository.CountAsync(i => i.Name == name);
         if (c != 0)

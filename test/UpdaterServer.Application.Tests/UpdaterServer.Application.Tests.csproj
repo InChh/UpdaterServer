@@ -17,4 +17,8 @@
     <ProjectReference Include="..\UpdaterServer.Domain.Tests\UpdaterServer.Domain.Tests.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="File\" />
+  </ItemGroup>
+
 </Project>
