@@ -16,25 +16,25 @@ jobs:
 
     steps:
     - uses: actions/checkout@v4
+      
     - name: Setup .NET
       uses: actions/setup-dotnet@v4
       with:
         dotnet-version: 9.0.x
-    - name: Try to restore cache
-      uses: actions/cache@v3
-      with:
-        path: ~/.nuget/packages
-        key: nuget-packages-${{ runner.os }}-${{ hashFiles('**/packages.lock.json', '**/UpdaterServer.sln') }}
-        restore-keys: |
-          nuget-packages-${{ runner.os }}-
+        cache: true
+
     - name: Restore dependencies
-      run: dotnet restore
-    - name: Build
-      run: dotnet build --no-restore --configuration Release
+      run: dotnet restore --locked-mode
+      
     - name: Create temp file
       shell: bash
       run : |
         echo "{}" > src/UpdaterServer.DbMigrator/appsettings.secrets.json
         echo "{}" > test/UpdaterServer.TestBase/appsettings.secrets.json
+        echo "{}" > test/UpdaterServer.HttpApi.Client.ConsoleTestApp/appsettings.secrets.json
+        
+    - name: Build
+      run: dotnet build --no-restore --configuration Release
+
     - name: Test
       run: dotnet test test/UpdaterServer.EntityFrameworkCore.Tests/UpdaterServer.EntityFrameworkCore.Tests.csproj --no-build --verbosity normal --configuration Release
