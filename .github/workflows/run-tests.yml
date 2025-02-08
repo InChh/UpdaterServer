@@ -31,5 +31,10 @@ jobs:
       run: dotnet restore
     - name: Build
       run: dotnet build --no-restore --configuration Release
+    - name: Create temp file
+      shell: bash
+      run : |
+        echo "{}" > src/UpdaterServer.DbMigrator/appsettings.secrets.json
+        echo "{}" > test/UpdaterServer.TestBase/appsettings.secrets.json
     - name: Test
       run: dotnet test test/UpdaterServer.EntityFrameworkCore.Tests/UpdaterServer.EntityFrameworkCore.Tests.csproj --no-build --verbosity normal --configuration Release
