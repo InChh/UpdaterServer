@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Dynamic.Core;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Authorization;
 using Volo.Abp.Application.Dtos;
 using Volo.Abp.Application.Services;
 using Volo.Abp.Domain.Repositories;
@@ -15,6 +16,7 @@ public class ApplicationAppService(
 )
     : ApplicationService, IApplicationAppService
 {
+    [Authorize]
     public async Task<ApplicationDto> CreateAsync(CreateUpdateApplicationDto input)
     {
         var app = await applicationManager.CreateAsync(input.Name, input.Description);
@@ -22,6 +24,7 @@ public class ApplicationAppService(
         return ObjectMapper.Map<Application, ApplicationDto>(app);
     }
 
+    [Authorize]
     public async Task<ApplicationDto> UpdateAsync(Guid id, CreateUpdateApplicationDto input)
     {
         var app = await applicationRepository.GetAsync(a => a.Id == id);
@@ -30,6 +33,7 @@ public class ApplicationAppService(
         return ObjectMapper.Map<Application, ApplicationDto>(app);
     }
 
+    [Authorize]
     public async Task<ApplicationDto> DeleteAsync(Guid id)
     {
         var app = await applicationRepository.GetAsync(a => a.Id == id);
@@ -37,12 +41,14 @@ public class ApplicationAppService(
         return ObjectMapper.Map<Application, ApplicationDto>(app);
     }
 
+    [Authorize]
     public async Task<ApplicationDto> GetAsync(Guid id)
     {
         var app = await applicationRepository.GetAsync(a => a.Id == id);
         return ObjectMapper.Map<Application, ApplicationDto>(app);
     }
 
+    [Authorize]
     public async Task<PagedResultDto<ApplicationDto>> GetListAsync(GetApplicationListDto input)
     {
         var query = await applicationRepository.GetQueryableAsync();

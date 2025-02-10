@@ -1,5 +1,6 @@
 using AutoMapper;
 using UpdaterServer.Application;
+using UpdaterServer.ApplicationVersion;
 using UpdaterServer.File;
 
 namespace UpdaterServer;
@@ -13,5 +14,6 @@ public class UpdaterServerApplicationAutoMapperProfile : Profile
          * into multiple profile classes for a better organization. */
         CreateMap<Application.Application, ApplicationDto>();
         CreateMap<FileMetadata, FileMetadataDto>();
+        CreateMap<ApplicationVersion.ApplicationVersion, ApplicationVersionDto>();
     }
 }

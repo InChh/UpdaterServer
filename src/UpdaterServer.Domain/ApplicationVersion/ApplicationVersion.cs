@@ -18,30 +18,7 @@ public class ApplicationVersion : FullAuditedAggregateRoot<Guid>
         get => _versionNumber;
         set
         {
-            // Check version number is valid, it should be in a specific format(xx.xx.xx).
-            var strings = value.Split('.');
-            if (strings.Length != 3)
-            {
-                throw new BusinessException(
-                    ApplicationVersionErrorCodes.VersionNumberInvalid).WithData("versionNumber", value);
-            }
-
-            // The first number of version should be current year and the second number should be current month.
-            var year = DateTime.Now.Year.ToString();
-            var month = DateTime.Now.Month.ToString();
-            if (strings[0] != year || strings[1] != month)
-            {
-                throw new BusinessException(
-                    ApplicationVersionErrorCodes.VersionNumberInvalid).WithData("versionNumber", value);
-            }
-
-            // The third number should be greater than 0.
-            if (int.Parse(strings[2]) <= 0)
-            {
-                throw new BusinessException(
-                    ApplicationVersionErrorCodes.VersionNumberInvalid).WithData("versionNumber", value);
-            }
-
+            value.CheckVersionNumber();
             _versionNumber = value;
         }
     }
@@ -50,7 +27,7 @@ public class ApplicationVersion : FullAuditedAggregateRoot<Guid>
 
     public ICollection<VersionFile> Files { get; private set; } = [];
 
-    public bool IsActive { get; set; }
+    public bool IsActive { get; private set; }
 
     private ApplicationVersion()
     {
@@ -114,5 +91,15 @@ public class ApplicationVersion : FullAuditedAggregateRoot<Guid>
     private bool IsInFile(Guid fileMetadataId)
     {
         return Files.Any(f => f.FileMetadataId == fileMetadataId);
+    }
+
+    public void Active()
+    {
+        IsActive = true;
+    }
+    
+    public void Deactive()
+    {
+        IsActive = false;
     }
 }

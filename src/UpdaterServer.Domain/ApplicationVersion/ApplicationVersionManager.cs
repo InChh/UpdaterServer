@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using UpdaterServer.File;
@@ -17,11 +18,10 @@ public class ApplicationVersionManager(
     IRepository<FileMetadata> fileRepository,
     IAsyncQueryableExecuter queryableExecutor) : DomainService
 {
-    public async Task<ApplicationVersion> CreateAsync(
-        Application.Application application,
+    public async Task<ApplicationVersion> CreateAsync(Application.Application application,
         string versionNumber,
         string description,
-        FileMetadata[] files)
+        IList<Guid> fileMetadataIds)
     {
         // Check if the application exists.
         var c = await applicationRepository.CountAsync(a => a.Id == application.Id);
@@ -35,7 +35,7 @@ public class ApplicationVersionManager(
 
         var version = new ApplicationVersion(guidGenerator.Create(), application.Id, versionNumber, description);
 
-        await SetFilesAsync(version, files);
+        await SetFilesAsync(version, fileMetadataIds);
 
         return version;
     }
@@ -44,7 +44,7 @@ public class ApplicationVersionManager(
         ApplicationVersion version,
         string? versionNumber,
         string? description,
-        FileMetadata[]? files)
+        IList<Guid>? fileMetadataIds)
     {
         var application = await applicationRepository.GetAsync(a => a.Id == version.ApplicationId);
 
@@ -59,9 +59,9 @@ public class ApplicationVersionManager(
             version.Description = description;
         }
 
-        if (files is not null)
+        if (fileMetadataIds is not null)
         {
-            await SetFilesAsync(version, files);
+            await SetFilesAsync(version, fileMetadataIds);
         }
     }
 
@@ -69,6 +69,8 @@ public class ApplicationVersionManager(
         Guid applicationId,
         string versionNumber)
     {
+        // Check if the version number is valid.
+        versionNumber.CheckVersionNumber();
         // Check if the version number exists.
         var c = await versionRepository.CountAsync(v =>
             v.ApplicationId == applicationId && v.VersionNumber == versionNumber);
@@ -86,7 +88,6 @@ public class ApplicationVersionManager(
             .OrderBy(a => a.VersionNumber, new ApplicationVersionComparer())
             .LastOrDefault();
 
-
         if (newest is null)
         {
             return;
@@ -100,10 +101,10 @@ public class ApplicationVersionManager(
         }
     }
 
-    private async Task SetFilesAsync(ApplicationVersion version, FileMetadata[] files)
+    private async Task SetFilesAsync(ApplicationVersion version, IList<Guid> fileMetadataIds)
     {
         // If there are no files, remove all files.
-        if (files.Length == 0)
+        if (fileMetadataIds.Count == 0)
         {
             version.RemoveAllFiles();
             return;
@@ -111,17 +112,15 @@ public class ApplicationVersionManager(
 
         // Find fileMetadataIds from database.
         var query = (await fileRepository.GetQueryableAsync())
-            .Where(x => files.Select(f => new { f.Hash, f.Size }).Contains(new { x.Hash, x.Size }))
-            .Select(x => x.Id);
+            .Where(f => fileMetadataIds.Contains(f.Id))
+            .Select(f => f.Id);
 
         var fileIds = await queryableExecutor.ToListAsync(query);
-
         // If not all fileMetadata are found from database, get missing file names and throw an exception.
-        if (fileIds.Count != files.Length)
+        if (fileIds.Count != fileMetadataIds.Count)
         {
             // get the missing files
-            var missingFiles = files.Where(f => !fileIds.Contains(f.Id))
-                .Select(f => f.Path)
+            var missingFiles = fileMetadataIds.Where(f => !fileIds.Contains(f))
                 .ToArray();
 
             throw new BusinessException(ApplicationVersionErrorCodes.FileDoesNotExist)

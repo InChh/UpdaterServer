@@ -1,13 +1,11 @@
 ﻿using System.Threading.Tasks;
 using Shouldly;
-using UpdaterServer.File;
 using Volo.Abp;
 using Volo.Abp.Domain.Entities;
-using Volo.Abp.Domain.Repositories;
 using Volo.Abp.Modularity;
 using Xunit;
 
-namespace UpdaterServer.Application;
+namespace UpdaterServer.File;
 
 public class FileAppServiceTests<TStartupModule> : UpdaterServerApplicationTestBase<TStartupModule>
     where TStartupModule : IAbpModule
@@ -128,6 +126,21 @@ public class FileAppServiceTests<TStartupModule> : UpdaterServerApplicationTestB
                 Hash = "foo"
             })
             .ShouldThrowAsync<EntityNotFoundException>();
+    }
+
+    [Fact]
+    public async Task GetListAsync_Should_Work()
+    {
+        var input = new GetFilesRequestDto()
+        {
+            MaxResultCount = UpdaterServerTestConsts.TestFileMetadataCount
+        };
+
+        var fileMetadata = await _fileAppService.GetListAsync(input);
+
+        fileMetadata.ShouldNotBeNull();
+        fileMetadata.TotalCount.ShouldBe(UpdaterServerTestConsts.TestFileMetadataCount);
+        fileMetadata.Items.Count.ShouldBe(UpdaterServerTestConsts.TestFileMetadataCount);
     }
 
     [Fact]

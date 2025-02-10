@@ -2,7 +2,7 @@
 
 namespace UpdaterServer.ApplicationVersion;
 
-public class ApplicationVersionComparer: IComparer<string>
+public class ApplicationVersionComparer : IComparer<string>
 {
     public int Compare(string? x, string? y)
     {
@@ -10,6 +10,9 @@ public class ApplicationVersionComparer: IComparer<string>
         {
             return 0;
         }
+        
+        x.CheckVersionNumber();
+        y.CheckVersionNumber();
 
         var xParts = x.Split('.');
         var yParts = y.Split('.');
