@@ -7,10 +7,10 @@ using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
+using Volo.Abp;
 using Volo.Abp.Data;
 using Volo.Abp.DependencyInjection;
 using Volo.Abp.Identity;
-using Volo.Abp.MultiTenancy;
 
 namespace UpdaterServer.Data;
 
@@ -20,16 +20,16 @@ public class UpdaterServerDbMigrationService : ITransientDependency
 
     private readonly IDataSeeder _dataSeeder;
     private readonly IEnumerable<IUpdaterServerDbSchemaMigrator> _dbSchemaMigrators;
-    private readonly ICurrentTenant _currentTenant;
+    private readonly IAbpHostEnvironment _hostEnvironment;
 
     public UpdaterServerDbMigrationService(
         IDataSeeder dataSeeder,
-        ICurrentTenant currentTenant,
-        IEnumerable<IUpdaterServerDbSchemaMigrator> dbSchemaMigrators)
+        IEnumerable<IUpdaterServerDbSchemaMigrator> dbSchemaMigrators,
+        IAbpHostEnvironment hostEnvironment)
     {
         _dataSeeder = dataSeeder;
-        _currentTenant = currentTenant;
         _dbSchemaMigrators = dbSchemaMigrators;
+        _hostEnvironment = hostEnvironment;
 
         Logger = NullLogger<UpdaterServerDbMigrationService>.Instance;
     }
@@ -63,12 +63,15 @@ public class UpdaterServerDbMigrationService : ITransientDependency
 
     private async Task SeedDataAsync()
     {
-        await _dataSeeder.SeedAsync(new DataSeedContext()
-            .WithProperty(IdentityDataSeedContributor.AdminEmailPropertyName,
-                UpdaterServerConsts.AdminEmailDefaultValue)
-            .WithProperty(IdentityDataSeedContributor.AdminPasswordPropertyName,
-                UpdaterServerConsts.AdminPasswordDefaultValue)
-        );
+        if (_hostEnvironment.IsDevelopment())
+        {
+            await _dataSeeder.SeedAsync(new DataSeedContext()
+                .WithProperty(IdentityDataSeedContributor.AdminEmailPropertyName,
+                    UpdaterServerConsts.AdminEmailDefaultValue)
+                .WithProperty(IdentityDataSeedContributor.AdminPasswordPropertyName,
+                    UpdaterServerConsts.AdminPasswordDefaultValue)
+            );
+        }
     }
 
     private bool AddInitialMigrationIfNotExist()
@@ -115,7 +118,8 @@ public class UpdaterServerDbMigrationService : ITransientDependency
     {
         var dbMigrationsProjectFolder = GetEntityFrameworkCoreProjectFolderPath();
 
-        return dbMigrationsProjectFolder != null && Directory.Exists(Path.Combine(dbMigrationsProjectFolder, "Migrations"));
+        return dbMigrationsProjectFolder != null &&
+               Directory.Exists(Path.Combine(dbMigrationsProjectFolder, "Migrations"));
     }
 
     private void AddInitialMigration()
@@ -173,7 +177,8 @@ public class UpdaterServerDbMigrationService : ITransientDependency
         {
             currentDirectory = Directory.GetParent(currentDirectory.FullName);
 
-            if (currentDirectory != null && Directory.GetFiles(currentDirectory.FullName).FirstOrDefault(f => f.EndsWith(".sln")) != null)
+            if (currentDirectory != null &&
+                Directory.GetFiles(currentDirectory.FullName).FirstOrDefault(f => f.EndsWith(".sln")) != null)
             {
                 return currentDirectory.FullName;
             }
