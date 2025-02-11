@@ -98,7 +98,7 @@ public class FileAppServiceTests<TStartupModule> : UpdaterServerApplicationTestB
 
         var fileMetadata = await _fileAppService.CreateAsync(input);
 
-        var fileMetadataFromDb = await _fileAppService.GetAsync(new GetFileRequestDto
+        var fileMetadataFromDb = await _fileAppService.GetByHashAsync(new GetFileRequestDto
         {
             Hash = input.Hash,
             Size = input.Size
@@ -110,7 +110,7 @@ public class FileAppServiceTests<TStartupModule> : UpdaterServerApplicationTestB
         fileMetadataFromDb.Size.ShouldBe(input.Size);
         fileMetadataFromDb.Url.ShouldBe(input.Url);
 
-        fileMetadataFromDb = await _fileAppService.GetAsync(new GetFileRequestDto
+        fileMetadataFromDb = await _fileAppService.GetByHashAsync(new GetFileRequestDto
         {
             Hash = input.Hash
         });
@@ -121,7 +121,7 @@ public class FileAppServiceTests<TStartupModule> : UpdaterServerApplicationTestB
         fileMetadataFromDb.Size.ShouldBe(input.Size);
         fileMetadataFromDb.Url.ShouldBe(input.Url);
 
-        await _fileAppService.GetAsync(new GetFileRequestDto
+        await _fileAppService.GetByHashAsync(new GetFileRequestDto
             {
                 Hash = "foo"
             })

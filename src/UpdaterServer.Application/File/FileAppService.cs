@@ -30,7 +30,7 @@ public class FileAppService(
         return ObjectMapper.Map<FileMetadata, FileMetadataDto>(fileMetadata);
     }
 
-    public async Task<FileMetadataDto> GetAsync(GetFileRequestDto input)
+    public async Task<FileMetadataDto> GetByHashAsync(GetFileRequestDto input)
     {
         var query = await fileMetadataRepository.GetQueryableAsync();
         query = query.Where(f => f.Hash == input.Hash);
