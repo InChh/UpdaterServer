@@ -303,4 +303,24 @@ public class ApplicationAppServiceTests<TStartupModule> : UpdaterServerApplicati
         apps.Items.Count.ShouldBe(UpdaterServerTestConsts.TestApplicationCount);
         apps.Items[^1].Name.ShouldBe("TestApp1");
     }
+    
+    [Fact]
+    public async Task DeleteAsync_Should_Work()
+    {
+        var input = new CreateUpdateApplicationDto
+        {
+            Name = "AnotherTestApp",
+            Description = "Another TestApp Description"
+        };
+
+        var app = await _applicationAppService.CreateAsync(input);
+
+        app.ShouldNotBeNull();
+        app.Name.ShouldBe(input.Name);
+        app.Description.ShouldBe(input.Description);
+
+        await _applicationAppService.DeleteAsync(app.Id);
+
+        await _applicationAppService.GetAsync(app.Id).ShouldThrowAsync<EntityNotFoundException>();
+    }
 }

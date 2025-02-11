@@ -48,18 +48,19 @@ public class ApplicationVersionManager(
     {
         var application = await applicationRepository.GetAsync(a => a.Id == version.ApplicationId);
 
-        if (versionNumber is not null)
+        if (versionNumber is not null && versionNumber != version.VersionNumber)
         {
             await CheckVersionNumber(application.Id, versionNumber);
             version.VersionNumber = versionNumber;
         }
 
-        if (description is not null)
+        if (description is not null && description != version.Description)
         {
             version.Description = description;
         }
 
-        if (fileMetadataIds is not null)
+        if (fileMetadataIds is not null &&
+            fileMetadataIds.Except(version.Files.Select(f => f.FileMetadataId).ToList()).Any())
         {
             await SetFilesAsync(version, fileMetadataIds);
         }

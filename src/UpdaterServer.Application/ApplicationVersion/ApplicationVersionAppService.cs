@@ -8,6 +8,7 @@ using UpdaterServer.File;
 using Volo.Abp;
 using Volo.Abp.Application.Dtos;
 using Volo.Abp.Application.Services;
+using Volo.Abp.Domain.Entities;
 using Volo.Abp.Domain.Repositories;
 
 namespace UpdaterServer.ApplicationVersion;
@@ -17,7 +18,7 @@ public class ApplicationVersionAppService(
     IRepository<ApplicationVersion> versionRepository,
     IRepository<Application.Application> applicationRepository,
     IRepository<FileMetadata> fileMetadataRepository)
-    : ApplicationService, IApplicationVersionAppService
+    : UpdaterServerAppService, IApplicationVersionAppService
 {
     [Authorize]
     public async Task<ApplicationVersionDto> CreateAsync(CreateUpdateApplicationVersionDto input)
@@ -32,9 +33,22 @@ public class ApplicationVersionAppService(
     [Authorize]
     public async Task<ApplicationVersionDto> UpdateAsync(Guid id, CreateUpdateApplicationVersionDto input)
     {
-        var version = await versionRepository.GetAsync(v => v.Id == id);
-        await applicationVersionManager.UpdateAsync(version, input.VersionNumber, input.Description,
-            input.FileMetadataIds);
+        var query = await versionRepository.WithDetailsAsync(x => x.Files);
+        query = query.Where(x => x.Id == id);
+
+        var version = await AsyncExecuter.SingleOrDefaultAsync(query);
+
+        if (version == null)
+        {
+            throw new EntityNotFoundException(typeof(ApplicationVersion));
+        }
+
+        await applicationVersionManager.UpdateAsync(
+            version,
+            input.VersionNumber,
+            input.Description,
+            input.FileMetadataIds
+        );
         return ObjectMapper.Map<ApplicationVersion, ApplicationVersionDto>(version);
     }
 
@@ -43,13 +57,13 @@ public class ApplicationVersionAppService(
         var versions = await versionRepository.GetListAsync();
 
         var latest = versions
+            .Where(v => v.IsActive && v.ApplicationId == applicationId)
             .OrderBy(v => v.VersionNumber, new ApplicationVersionComparer())
             .LastOrDefault();
 
         if (latest == null)
         {
-            throw new BusinessException(ApplicationVersionErrorCodes.VersionDoesNotExist).WithData("applicationId",
-                applicationId);
+            throw new EntityNotFoundException(typeof(ApplicationVersion));
         }
 
         return ObjectMapper.Map<ApplicationVersion, ApplicationVersionDto>(latest);
@@ -70,6 +84,7 @@ public class ApplicationVersionAppService(
             .Where(v => v.ApplicationId == applicationId);
 
         var total = await AsyncExecuter.CountAsync(query);
+        // TODO: Sorting by version number, currently only sorting by creation time could work.
         query = query.OrderBy(input.Sorting ?? nameof(ApplicationVersion.CreationTime))
             .PageBy(input.SkipCount, input.MaxResultCount);
 
@@ -84,8 +99,15 @@ public class ApplicationVersionAppService(
 
     public async Task<ApplicationVersionFilesDto> GetFilesByVersionNumberAsync(Guid applicationId, string versionNumber)
     {
-        var version = await versionRepository.GetAsync(v =>
-            v.ApplicationId == applicationId && v.VersionNumber == versionNumber);
+        var query = (await versionRepository.WithDetailsAsync(x => x.Files))
+            .Where(v => v.ApplicationId == applicationId && v.VersionNumber == versionNumber);
+
+        var version = await AsyncExecuter.SingleOrDefaultAsync(query);
+
+        if (version == null)
+        {
+            throw new EntityNotFoundException(typeof(ApplicationVersion));
+        }
 
         var fileIds = version.Files.Select(f => f.FileMetadataId).ToArray();
 
@@ -99,7 +121,14 @@ public class ApplicationVersionAppService(
 
     public async Task<ApplicationVersionFilesDto> GetFilesByIdAsync(Guid id)
     {
-        var version = await versionRepository.GetAsync(v => v.Id == id);
+        var query = (await versionRepository.WithDetailsAsync(v => v.Files))
+            .Where(v => v.Id == id);
+        var version = await AsyncExecuter.SingleOrDefaultAsync(query);
+
+        if (version == null)
+        {
+            throw new EntityNotFoundException(typeof(ApplicationVersion));
+        }
 
         var fileIds = version.Files.Select(f => f.FileMetadataId).ToArray();
 

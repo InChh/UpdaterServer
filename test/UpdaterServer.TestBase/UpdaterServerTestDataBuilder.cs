@@ -57,7 +57,7 @@ public class UpdaterServerTestDataSeedContributor(
                 var applicationVersion = new ApplicationVersion.ApplicationVersion(guidGenerator.Create(), app.Id,
                     versionNumber,
                     $"Test version {versionNumber}");
-                if (i % 2 == 0)
+                if ((i + 1) % 2 == 0)
                 {
                     applicationVersion.AddFiles(fileMetadatas.Select(metadata => metadata.Id).ToArray());
                 }
@@ -70,6 +70,7 @@ public class UpdaterServerTestDataSeedContributor(
                             .ToArray());
                 }
 
+                applicationVersion.Active();
                 await versionRepository.InsertAsync(applicationVersion);
             }
         }

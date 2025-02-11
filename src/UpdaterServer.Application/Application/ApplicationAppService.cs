@@ -14,7 +14,7 @@ public class ApplicationAppService(
     ApplicationManager applicationManager,
     IRepository<Application> applicationRepository
 )
-    : ApplicationService, IApplicationAppService
+    : UpdaterServerAppService, IApplicationAppService
 {
     [Authorize]
     public async Task<ApplicationDto> CreateAsync(CreateUpdateApplicationDto input)

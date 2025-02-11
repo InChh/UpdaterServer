@@ -14,7 +14,7 @@ public class FileAppService(
     IRepository<FileMetadata> fileMetadataRepository,
     FileMetadataManager fileMetadataManager
 )
-    : ApplicationService, IFileAppService
+    : UpdaterServerAppService, IFileAppService
 {
     public async Task<FileMetadataDto> CreateAsync(CreateFileMetadataDto input)
     {
@@ -48,7 +48,7 @@ public class FileAppService(
     {
         var query = await fileMetadataRepository.GetQueryableAsync();
         query = query
-            .WhereIf(input.Filter != null, f=>f.Path.Contains(input.Filter!));
+            .WhereIf(input.Filter != null, f => f.Path.Contains(input.Filter!));
 
         var totalCount = await AsyncExecuter.CountAsync(query);
         query = query.OrderBy(input.Sorting ?? nameof(FileMetadata.Path));
