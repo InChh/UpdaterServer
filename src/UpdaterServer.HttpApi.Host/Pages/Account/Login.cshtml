@@ -1,0 +1,205 @@
+﻿@page
+@using Microsoft.AspNetCore.Mvc.Localization
+@using Volo.Abp.Account.Localization
+@using Volo.Abp.Account.Settings
+@using Volo.Abp.Account.Web.Pages.Account;
+@using Volo.Abp.AspNetCore.Mvc.UI.Theming;
+@using Volo.Abp.Identity;
+@using Volo.Abp.Settings
+@model Volo.Abp.Account.Web.Pages.Account.LoginModel
+@inject IHtmlLocalizer<AccountResource> L
+@inject IThemeManager ThemeManager
+@inject Volo.Abp.Settings.ISettingProvider SettingProvider
+
+<link rel="stylesheet" href="/Pages/Account/index.css" asp-append-version="true"/>
+
+@{
+    Layout = ThemeManager.CurrentTheme.GetAccountLayout();
+}
+
+@section scripts
+{
+    <abp-script-bundle name="@typeof(LoginModel).FullName">
+        <abp-script src="/Pages/Account/Login.js"/>
+    </abp-script-bundle>
+}
+
+<div class="bg-gray-50 dark:bg-gray-800 w-full h-full">
+    <div class="flex min-h-[80vh] flex-col justify-center py-12 sm:px-6 lg:px-8">
+        <div class="text-center sm:mx-auto sm:w-full sm:max-w-md">
+            <h1 class="text-3xl font-extrabold text-gray-900 dark:text-white">
+                @L["Login"]
+            </h1>
+        </div>
+
+        @if (await SettingProvider.IsTrueAsync(AccountSettingNames.IsSelfRegistrationEnabled))
+        {
+            <strong>
+                @L["AreYouANewUser"]
+                <a href="@Url.Page("./Register", new { returnUrl = Model.ReturnUrl, returnUrlHash = Model.ReturnUrlHash })"
+                   class="text-decoration-none">@L["Register"]</a>
+            </strong>
+        }
+
+        @if (Model.EnableLocalLogin)
+        {
+            <div class="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
+                <div class="bg-white dark:bg-gray-700 px-4 pb-4 pt-8 sm:rounded-lg sm:px-10 sm:pb-6 sm:shadow">
+                    <form method="post" class="space-y-6">
+                        <div>
+                            <label asp-for="LoginInput.UserNameOrEmailAddress"
+                                   class="block text-sm font-medium text-gray-700 dark:text-white"></label>
+                            <div class="mt-1">
+                                <input asp-for="LoginInput.UserNameOrEmailAddress"
+                                       class="block w-full appearance-none rounded-md border border-gray-300 px-3 py-2 placeholder-gray-400 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-indigo-500 dark:bg-gray-800 dark:border-gray-600 dark:text-white dark:placeholder-gray-300 dark:focus:border-indigo-400 dark:focus:ring-indigo-400 sm:text-sm"
+                                >
+                                <span asp-validation-for="LoginInput.UserNameOrEmailAddress" class="input-error"></span>
+                            </div>
+                        </div>
+                        <div>
+                            <label asp-for="LoginInput.Password"
+                                   class="block text-sm font-medium text-gray-700 dark:text-white"></label>
+                            <div class="mt-1 input-container relative">
+                                <input type="password"
+                                       asp-for="LoginInput.Password"
+                                       autocomplete="new-password"
+                                       maxlength="@IdentityUserConsts.MaxPasswordLength"
+                                       class="block w-full appearance-none rounded-md border border-gray-300 px-3 py-2 placeholder-gray-400 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-indigo-500 dark:bg-gray-800 dark:border-gray-600 dark:text-white dark:placeholder-gray-300 dark:focus:border-indigo-400 dark:focus:ring-indigo-400 sm:text-sm"
+                                >
+                                <button type="button" id="PasswordVisibilityButton" class="absolute right-2">
+                                    <i class="fa fa-eye-slash" aria-hidden="true"></i>
+                                </button>
+                            </div>
+                            <span asp-validation-for="LoginInput.Password"></span>
+                        </div>
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center">
+                                <abp-input asp-for="LoginInput.RememberMe"
+                                           class="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500 dark:text-white dark:border-gray-600 dark:focus:ring-indigo-400 disabled:cursor-wait disabled:opacity-50"
+                                />
+                            </div>
+                            <div class="text-sm">
+                                <a class="font-medium text-indigo-400 hover:text-indigo-500"
+                                   href="@Url.Page("./ForgotPassword", new { returnUrl = Model.ReturnUrl, returnUrlHash = Model.ReturnUrlHash })"
+                                >
+                                    @L["ForgotPassword"]
+                                </a>
+                            </div>
+                        </div>
+                        <div>
+                            <button type="submit" button-type="Primary" name="Action" value="Login"
+                                    class="group relative flex w-full justify-center rounded-md border border-transparent bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 dark:bg-indigo-700 dark:border-transparent dark:hover:bg-indigo-600 dark:focus:ring-indigo-400 dark:focus:ring-offset-2 disabled:cursor-wait disabled:opacity-50">
+                                @L["Login"]
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        }
+        @if (Model.VisibleExternalProviders.Any())
+        {
+            <div class="mt-2">
+                <h5>@L["OrLoginWith"]</h5>
+                <form asp-page="./Login" asp-page-handler="ExternalLogin" asp-route-returnUrl="@Model.ReturnUrl"
+                      asp-route-returnUrlHash="@Model.ReturnUrlHash" method="post">
+                    @foreach (var provider in Model.VisibleExternalProviders)
+                    {
+                        <button type="submit" class="btn btn-primary m-1" name="provider"
+                                value="@provider.AuthenticationScheme"
+                                title="@L["LogInUsingYourProviderAccount", provider.DisplayName]">@provider.DisplayName</button>
+                    }
+                </form>
+            </div>
+        }
+
+        @if (!Model.EnableLocalLogin && !Model.VisibleExternalProviders.Any())
+        {
+            <div class="alert-warning">
+                <strong>@L["InvalidLoginRequest"]</strong>
+                @L["ThereAreNoLoginSchemesConfiguredForThisClient"]
+            </div>
+        }
+    </div>
+
+
+    @* <div class="min-h-screen bg-base-200 flex items-center justify-center"> *@
+    @*     <div class="card mt-3 shadow-sm rounded-2xl"> *@
+    @*         <div class="card-body p-5"> *@
+    @*             <h4 class="card-title text-2xl font-bold text-center justify-content-center mb-6">@L["Login"]</h4> *@
+    @*             @if (await SettingProvider.IsTrueAsync(AccountSettingNames.IsSelfRegistrationEnabled)) *@
+    @*             { *@
+    @*                 <strong> *@
+    @*                     @L["AreYouANewUser"] *@
+    @*                     <a href="@Url.Page("./Register", new { returnUrl = Model.ReturnUrl, returnUrlHash = Model.ReturnUrlHash })" *@
+    @*                        class="text-decoration-none">@L["Register"]</a> *@
+    @*                 </strong> *@
+    @*             } *@
+    @*             @if (Model.EnableLocalLogin) *@
+    @*             { *@
+    @*                 <form method="post" class="mt-4"> *@
+    @*                     <div class="mb-3"> *@
+    @*                         <label asp-for="LoginInput.UserNameOrEmailAddress" class="label"></label> *@
+    @*                         <input asp-for="LoginInput.UserNameOrEmailAddress" class="input input-md"/> *@
+    @*                         <span asp-validation-for="LoginInput.UserNameOrEmailAddress" class="input-error"></span> *@
+    @*                     </div> *@
+    @* *@
+    @*                     <div class="mb-3"> *@
+    @*                         <label asp-for="LoginInput.Password" class="label"></label> *@
+    @*                         <div class="input-container relative"> *@
+    @*                             <input type="password" class="input input-md" autocomplete="new-password" *@
+    @*                                    maxlength="@IdentityUserConsts.MaxPasswordLength" asp-for="LoginInput.Password"/> *@
+    @*                             <button class="absolute right-2 top-1/2 transform -translate-y-1/2" type="button" *@
+    @*                                     id="PasswordVisibilityButton"> *@
+    @*                                 <i class="fa fa-eye-slash" aria-hidden="true"></i> *@
+    @*                             </button> *@
+    @*                         </div> *@
+    @*                         <span asp-validation-for="LoginInput.Password"></span> *@
+    @*                     </div> *@
+    @*                     <abp-row> *@
+    @*                         <abp-column> *@
+    @*                             <abp-input asp-for="LoginInput.RememberMe" class="mb-4"/> *@
+    @*                         </abp-column> *@
+    @*                         <abp-column class="text-end"> *@
+    @*                             <a href="@Url.Page("./ForgotPassword", new { returnUrl = Model.ReturnUrl, returnUrlHash = Model.ReturnUrlHash })">@L["ForgotPassword"]</a> *@
+    @*                         </abp-column> *@
+    @*                     </abp-row> *@
+    @*                     <div class="d-grid gap-2"> *@
+    @*                         <button type="submit" button-type="Primary" name="Action" value="Login" *@
+    @*                                 class="btn btn-primary btn-lg mt-3">@L["Login"]</button> *@
+    @*                         @if (Model.ShowCancelButton) *@
+    @*                         { *@
+    @*                             <abp-button type="submit" button-type="Secondary" formnovalidate="formnovalidate" *@
+    @*                                         name="Action" value="Cancel" class="btn-lg mt-3">@L["Cancel"]</abp-button> *@
+    @*                         } *@
+    @*                     </div> *@
+    @*                 </form> *@
+    @*             } *@
+    @* *@
+    @*             @if (Model.VisibleExternalProviders.Any()) *@
+    @*             { *@
+    @*                 <div class="mt-2"> *@
+    @*                     <h5>@L["OrLoginWith"]</h5> *@
+    @*                     <form asp-page="./Login" asp-page-handler="ExternalLogin" asp-route-returnUrl="@Model.ReturnUrl" *@
+    @*                           asp-route-returnUrlHash="@Model.ReturnUrlHash" method="post"> *@
+    @*                         @foreach (var provider in Model.VisibleExternalProviders) *@
+    @*                         { *@
+    @*                             <button type="submit" class="btn btn-primary m-1" name="provider" *@
+    @*                                     value="@provider.AuthenticationScheme" *@
+    @*                                     title="@L["LogInUsingYourProviderAccount", provider.DisplayName]">@provider.DisplayName</button> *@
+    @*                         } *@
+    @*                     </form> *@
+    @*                 </div> *@
+    @*             } *@
+    @* *@
+    @*             @if (!Model.EnableLocalLogin && !Model.VisibleExternalProviders.Any()) *@
+    @*             { *@
+    @*                 <div class="alert alert-warning"> *@
+    @*                     <strong>@L["InvalidLoginRequest"]</strong> *@
+    @*                     @L["ThereAreNoLoginSchemesConfiguredForThisClient"] *@
+    @*                 </div> *@
+    @*             } *@
+    @* *@
+    @*         </div> *@
+    @*     </div> *@
+    @* </div> *@
+</div>
