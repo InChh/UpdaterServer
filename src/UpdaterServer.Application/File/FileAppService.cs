@@ -1,21 +1,22 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Dynamic.Core;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Authorization;
 using Volo.Abp.Application.Dtos;
-using Volo.Abp.Application.Services;
 using Volo.Abp.Domain.Entities;
 using Volo.Abp.Domain.Repositories;
-using Volo.Abp.Guids;
 
 namespace UpdaterServer.File;
 
 public class FileAppService(
     IRepository<FileMetadata> fileMetadataRepository,
-    FileMetadataManager fileMetadataManager
-)
+    FileMetadataManager fileMetadataManager,
+    IRepository<ApplicationVersion.ApplicationVersion> versionRepository)
     : UpdaterServerAppService, IFileAppService
 {
+    [Authorize]
     public async Task<FileMetadataDto> CreateAsync(CreateFileMetadataDto input)
     {
         var fileMetadata = await fileMetadataManager.CreateAsync(
@@ -30,6 +31,7 @@ public class FileAppService(
         return ObjectMapper.Map<FileMetadata, FileMetadataDto>(fileMetadata);
     }
 
+    [Authorize]
     public async Task<FileMetadataDto> GetByHashAsync(GetFileRequestDto input)
     {
         var query = await fileMetadataRepository.GetQueryableAsync();
@@ -44,6 +46,30 @@ public class FileAppService(
         return ObjectMapper.Map<FileMetadata, FileMetadataDto>(fileMetadata);
     }
 
+    [Authorize]
+    public async Task<FileMetadataDto> GetByIdAsync(Guid id)
+    {
+        var fileMetadata = await fileMetadataRepository.GetAsync(f => f.Id == id);
+        return ObjectMapper.Map<FileMetadata, FileMetadataDto>(fileMetadata);
+    }
+
+    public async Task<List<FileMetadataDto>> GetByVersionIdAsync(Guid versionId)
+    {
+        var query = await versionRepository.WithDetailsAsync(v => v.Files);
+        query = query.Where(v => v.Id == versionId);
+        var version = await AsyncExecuter.FirstOrDefaultAsync(query);
+        if (version is null)
+        {
+            throw new EntityNotFoundException(typeof(ApplicationVersion.ApplicationVersion), versionId);
+        }
+
+        var query2 = await fileMetadataRepository.GetQueryableAsync();
+        query2 = query2.Where(f => version.Files.Any(vf => vf.FileMetadataId == f.Id));
+        var fileMetadatas = await AsyncExecuter.ToListAsync(query2);
+        return ObjectMapper.Map<List<FileMetadata>, List<FileMetadataDto>>(fileMetadatas);
+    }
+
+    [Authorize]
     public async Task<PagedResultDto<FileMetadataDto>> GetListAsync(GetFilesRequestDto input)
     {
         var query = await fileMetadataRepository.GetQueryableAsync();

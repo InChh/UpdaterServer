@@ -69,6 +69,7 @@ public class OpenIddictDataSeedContributor : IDataSeedContributor, ITransientDep
     private async Task CreateApplicationsAsync()
     {
         var commonScopes = new List<string> {
+            OpenIddictConstants.Permissions.Scopes.Profile,
             OpenIddictConstants.Permissions.Scopes.Email,
             OpenIddictConstants.Permissions.Scopes.Phone,
             OpenIddictConstants.Permissions.Scopes.Roles,
@@ -83,6 +84,7 @@ public class OpenIddictDataSeedContributor : IDataSeedContributor, ITransientDep
         if (!consoleAndAngularClientId.IsNullOrWhiteSpace())
         {
             var consoleAndAngularClientRootUrl = configurationSection["UpdaterServer_App:RootUrl"]?.TrimEnd('/');
+            var redirectUri = configurationSection["UpdaterServer_App:RedirectUri"]?.TrimEnd('/');
             await CreateApplicationAsync(
                 applicationType: OpenIddictConstants.ApplicationTypes.Web,
                 name: consoleAndAngularClientId!,
@@ -99,7 +101,7 @@ public class OpenIddictDataSeedContributor : IDataSeedContributor, ITransientDep
                     "Impersonation"
                 },
                 scopes: commonScopes,
-                redirectUri: consoleAndAngularClientRootUrl,
+                redirectUri: redirectUri,
                 postLogoutRedirectUri: consoleAndAngularClientRootUrl,
                 clientUri: consoleAndAngularClientRootUrl,
                 logoUri: "/images/clients/angular.svg"

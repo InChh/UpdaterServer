@@ -8,11 +8,13 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.AspNetCore.Extensions.DependencyInjection;
+using Microsoft.AspNetCore.Identity;
 using OpenIddict.Validation.AspNetCore;
 using OpenIddict.Server.AspNetCore;
 using UpdaterServer.EntityFrameworkCore;
 using UpdaterServer.MultiTenancy;
 using Microsoft.OpenApi.Models;
+using UpdaterServer.Sts;
 using Volo.Abp;
 using Volo.Abp.Account.Web;
 using Volo.Abp.AspNetCore.MultiTenancy;
@@ -50,7 +52,7 @@ namespace UpdaterServer;
     typeof(AbpSettingManagementWebModule),
     typeof(AbpIdentityWebModule)
 )]
-    public class UpdaterServerHttpApiHostModule : AbpModule
+public class UpdaterServerHttpApiHostModule : AbpModule
 {
     public override void PreConfigureServices(ServiceConfigurationContext context)
     {
@@ -118,6 +120,30 @@ namespace UpdaterServer;
         ConfigureSwagger(context, configuration);
         ConfigureVirtualFileSystem(context);
         ConfigureCors(context, configuration);
+        ConfigureAliyunOssClient(context);
+
+        Configure<IdentityOptions>(options =>
+        {
+            options.Password.RequireUppercase = false;
+            options.Password.RequiredUniqueChars = 0;
+        });
+    }
+
+    private void ConfigureAliyunOssClient(ServiceConfigurationContext context)
+    {
+        var accessKeyId = Environment.GetEnvironmentVariable(StsEnvironmentNameConsts.AccessKeyId);
+        var accessKeySecret = Environment.GetEnvironmentVariable(StsEnvironmentNameConsts.AccessKeySecret);
+        var endpoint = Environment.GetEnvironmentVariable(StsEnvironmentNameConsts.Endpoint);
+        
+        var config = new AlibabaCloud.OpenApiClient.Models.Config
+        {
+            AccessKeyId = accessKeyId,
+            AccessKeySecret = accessKeySecret,
+            // Endpoint 请参考 https://api.aliyun.com/product/Sts
+            Endpoint = endpoint
+        };
+
+        context.Services.AddAliyunOssClient(config);
     }
 
     private void ConfigureAuthentication(ServiceConfigurationContext context)

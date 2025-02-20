@@ -5,6 +5,7 @@ using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 using Volo.Abp;
@@ -20,12 +21,12 @@ public class UpdaterServerDbMigrationService : ITransientDependency
 
     private readonly IDataSeeder _dataSeeder;
     private readonly IEnumerable<IUpdaterServerDbSchemaMigrator> _dbSchemaMigrators;
-    private readonly IAbpHostEnvironment _hostEnvironment;
+    private readonly IHostEnvironment _hostEnvironment;
 
     public UpdaterServerDbMigrationService(
         IDataSeeder dataSeeder,
         IEnumerable<IUpdaterServerDbSchemaMigrator> dbSchemaMigrators,
-        IAbpHostEnvironment hostEnvironment)
+        IHostEnvironment hostEnvironment)
     {
         _dataSeeder = dataSeeder;
         _dbSchemaMigrators = dbSchemaMigrators;
@@ -66,10 +67,24 @@ public class UpdaterServerDbMigrationService : ITransientDependency
         if (_hostEnvironment.IsDevelopment())
         {
             await _dataSeeder.SeedAsync(new DataSeedContext()
-                .WithProperty(IdentityDataSeedContributor.AdminEmailPropertyName,
-                    UpdaterServerConsts.AdminEmailDefaultValue)
+                .WithProperty(IdentityDataSeedContributor.AdminUserNamePropertyName,
+                    UpdaterServerConsts.AdminUserNameDefaultValue)
                 .WithProperty(IdentityDataSeedContributor.AdminPasswordPropertyName,
                     UpdaterServerConsts.AdminPasswordDefaultValue)
+            );
+        }
+        else
+        {
+            var password = Environment.GetEnvironmentVariable("ADMIN_PASSWORD") ??
+                           Guid.NewGuid().ToString("N").Truncate(12);
+
+            Logger.LogInformation("Initial admin username {}, password: {}",
+                UpdaterServerConsts.AdminUserNameDefaultValue, password);
+            await _dataSeeder.SeedAsync(new DataSeedContext()
+                .WithProperty(IdentityDataSeedContributor.AdminUserNamePropertyName,
+                    UpdaterServerConsts.AdminUserNameDefaultValue)
+                .WithProperty(IdentityDataSeedContributor.AdminPasswordPropertyName,
+                    password)
             );
         }
     }
