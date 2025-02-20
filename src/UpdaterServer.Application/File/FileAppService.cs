@@ -11,7 +11,7 @@ using Volo.Abp.Domain.Repositories;
 namespace UpdaterServer.File;
 
 public class FileAppService(
-    IRepository<FileMetadata> fileMetadataRepository,
+    IFileMetadataRepository fileMetadataRepository,
     FileMetadataManager fileMetadataManager,
     IRepository<ApplicationVersion.ApplicationVersion> versionRepository)
     : UpdaterServerAppService, IFileAppService
@@ -37,6 +37,7 @@ public class FileAppService(
         var query = await fileMetadataRepository.GetQueryableAsync();
         query = query.Where(f => f.Hash == input.Hash);
         query = query.WhereIf(input.Size.HasValue, f => f.Size == input.Size);
+        query = query.WhereIf(input.Path != null, f => f.Path == input.Path);
         var fileMetadata = await AsyncExecuter.FirstOrDefaultAsync(query);
         if (fileMetadata is null)
         {
@@ -63,9 +64,7 @@ public class FileAppService(
             throw new EntityNotFoundException(typeof(ApplicationVersion.ApplicationVersion), versionId);
         }
 
-        var query2 = await fileMetadataRepository.GetQueryableAsync();
-        query2 = query2.Where(f => version.Files.Any(vf => vf.FileMetadataId == f.Id));
-        var fileMetadatas = await AsyncExecuter.ToListAsync(query2);
+        var fileMetadatas = await fileMetadataRepository.GetByVersionIdAsync(version.Id);
         return ObjectMapper.Map<List<FileMetadata>, List<FileMetadataDto>>(fileMetadatas);
     }
 

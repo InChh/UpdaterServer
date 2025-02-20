@@ -104,6 +104,7 @@ public class ApplicationVersionManager(
 
     private async Task SetFilesAsync(ApplicationVersion version, IList<Guid> fileMetadataIds)
     {
+        fileMetadataIds = fileMetadataIds.Distinct().ToList();
         // If there are no files, remove all files.
         if (fileMetadataIds.Count == 0)
         {

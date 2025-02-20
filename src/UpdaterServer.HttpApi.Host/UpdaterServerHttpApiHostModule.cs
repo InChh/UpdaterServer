@@ -14,6 +14,7 @@ using OpenIddict.Server.AspNetCore;
 using UpdaterServer.EntityFrameworkCore;
 using UpdaterServer.MultiTenancy;
 using Microsoft.OpenApi.Models;
+using UpdaterServer.Localization;
 using UpdaterServer.Sts;
 using Volo.Abp;
 using Volo.Abp.Account.Web;
@@ -34,6 +35,7 @@ using Volo.Abp.Swashbuckle;
 using Volo.Abp.Studio.Client.AspNetCore;
 using Volo.Abp.Security.Claims;
 using Volo.Abp.Identity.Web;
+using Volo.Abp.Localization.ExceptionHandling;
 using Volo.Abp.SettingManagement.Web;
 
 namespace UpdaterServer;
@@ -126,6 +128,11 @@ public class UpdaterServerHttpApiHostModule : AbpModule
         {
             options.Password.RequireUppercase = false;
             options.Password.RequiredUniqueChars = 0;
+        });
+        
+        context.Services.Configure<AbpExceptionLocalizationOptions>(options =>
+        {
+            options.MapCodeNamespace("App", typeof(UpdaterServerResource));
         });
     }
 
