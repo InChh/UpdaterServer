@@ -26,31 +26,29 @@ public class DbMigratorHostedService : IHostedService
 
     public async Task StartAsync(CancellationToken cancellationToken)
     {
-        using (var application = await AbpApplicationFactory.CreateAsync<UpdaterServerDbMigratorModule>(options =>
-               {
-                   var builder = new ConfigurationBuilder();
-                   builder
-                       .AddJsonFile("appsettings.json", optional: false)
-                       .AddJsonFile($"appsettings.{_hostEnvironment.EnvironmentName}.json", optional: true)
-                       .AddEnvironmentVariables();
-                   options.Services.ReplaceConfiguration(_configuration);
-                   options.UseAutofac();
-                   options.Services.AddLogging(c => c.AddSerilog());
-                   options.AddDataMigrationEnvironment();
-                   options.Services.AddSingleton(_hostEnvironment);
-               }))
+        using var application = await AbpApplicationFactory.CreateAsync<UpdaterServerDbMigratorModule>(options =>
         {
-            await application.InitializeAsync();
+            var builder = new ConfigurationBuilder();
+            builder
+                .AddJsonFile("appsettings.json", optional: false)
+                .AddJsonFile($"appsettings.{_hostEnvironment.EnvironmentName}.json", optional: true)
+                .AddEnvironmentVariables();
+            options.Services.ReplaceConfiguration(_configuration);
+            options.UseAutofac();
+            options.Services.AddLogging(c => c.AddSerilog());
+            options.AddDataMigrationEnvironment();
+            options.Services.AddSingleton(_hostEnvironment);
+        });
+        await application.InitializeAsync();
 
-            await application
-                .ServiceProvider
-                .GetRequiredService<UpdaterServerDbMigrationService>()
-                .MigrateAsync();
+        await application
+            .ServiceProvider
+            .GetRequiredService<UpdaterServerDbMigrationService>()
+            .MigrateAsync();
 
-            await application.ShutdownAsync();
+        await application.ShutdownAsync();
 
-            _hostApplicationLifetime.StopApplication();
-        }
+        _hostApplicationLifetime.StopApplication();
     }
 
     public Task StopAsync(CancellationToken cancellationToken)

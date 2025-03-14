@@ -3,6 +3,7 @@ using System.IO;
 using System.Linq;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Cors;
+using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -20,6 +21,7 @@ using Volo.Abp;
 using Volo.Abp.Account.Web;
 using Volo.Abp.AspNetCore.MultiTenancy;
 using Volo.Abp.AspNetCore.Mvc;
+using Volo.Abp.AspNetCore.Mvc.AntiForgery;
 using Volo.Abp.Autofac;
 using Volo.Abp.Modularity;
 using Volo.Abp.UI.Navigation.Urls;
@@ -128,12 +130,15 @@ public class UpdaterServerHttpApiHostModule : AbpModule
         {
             options.Password.RequireUppercase = false;
             options.Password.RequiredUniqueChars = 0;
+            options.Password.RequireNonAlphanumeric= false;
         });
-        
+
         context.Services.Configure<AbpExceptionLocalizationOptions>(options =>
         {
             options.MapCodeNamespace("App", typeof(UpdaterServerResource));
         });
+        context.Services.AddDataProtection()
+            .PersistKeysToDbContext<UpdaterServerDbContext>();
     }
 
     private void ConfigureAliyunOssClient(ServiceConfigurationContext context)
@@ -141,13 +146,14 @@ public class UpdaterServerHttpApiHostModule : AbpModule
         var accessKeyId = Environment.GetEnvironmentVariable(StsEnvironmentNameConsts.AccessKeyId);
         var accessKeySecret = Environment.GetEnvironmentVariable(StsEnvironmentNameConsts.AccessKeySecret);
         var endpoint = Environment.GetEnvironmentVariable(StsEnvironmentNameConsts.Endpoint);
-        
+
         var config = new AlibabaCloud.OpenApiClient.Models.Config
         {
             AccessKeyId = accessKeyId,
             AccessKeySecret = accessKeySecret,
             // Endpoint 请参考 https://api.aliyun.com/product/Sts
-            Endpoint = endpoint
+            Endpoint = endpoint,
+            RegionId = endpoint!.Split('.')[1]
         };
 
         context.Services.AddAliyunOssClient(config);

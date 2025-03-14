@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.DataProtection.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using UpdaterServer.Application;
 using UpdaterServer.ApplicationVersion;
@@ -22,13 +23,14 @@ namespace UpdaterServer.EntityFrameworkCore;
 [ConnectionStringName("Default")]
 public class UpdaterServerDbContext(DbContextOptions<UpdaterServerDbContext> options) :
     AbpDbContext<UpdaterServerDbContext>(options),
-    IIdentityDbContext
+    IIdentityDbContext, IDataProtectionKeyContext
 {
     /* Add DbSet properties for your Aggregate Roots / Entities here. */
     public DbSet<Application.Application> Applications { get; set; }
     public DbSet<ApplicationVersion.ApplicationVersion> ApplicationVersions { get; set; }
     public DbSet<FileMetadata> FileMetadatas { get; set; }
 
+    public DbSet<DataProtectionKey> DataProtectionKeys { get; set; }
 
     #region Entities from the modules
 
@@ -78,6 +80,19 @@ public class UpdaterServerDbContext(DbContextOptions<UpdaterServerDbContext> opt
         //    b.ConfigureByConvention(); //auto configure for the base class props
         //    //...
         //});
+
+        #region DataProtectionKey
+
+        builder.Entity<DataProtectionKey>(b =>
+        {
+            b.ToTable(UpdaterServerConsts.DbTablePrefix + "DataProtectionKeys", UpdaterServerConsts.DbSchema);
+            b.ConfigureByConvention();
+            b.HasKey(x => x.Id);
+            b.Property(x => x.FriendlyName);
+            b.Property(x => x.Xml);
+        });
+
+        #endregion
 
         #region Application
 

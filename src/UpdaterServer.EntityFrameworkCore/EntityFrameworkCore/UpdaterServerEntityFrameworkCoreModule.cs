@@ -1,6 +1,6 @@
 using System;
+using Microsoft.AspNetCore.DataProtection;
 using Microsoft.Extensions.DependencyInjection;
-using Volo.Abp.Uow;
 using Volo.Abp.AuditLogging.EntityFrameworkCore;
 using Volo.Abp.BackgroundJobs.EntityFrameworkCore;
 using Volo.Abp.EntityFrameworkCore;
@@ -27,7 +27,7 @@ namespace UpdaterServer.EntityFrameworkCore;
     typeof(AbpIdentityEntityFrameworkCoreModule),
     typeof(AbpOpenIddictEntityFrameworkCoreModule),
     typeof(BlobStoringDatabaseEntityFrameworkCoreModule)
-    )]
+)]
 public class UpdaterServerEntityFrameworkCoreModule : AbpModule
 {
     public override void PreConfigureServices(ServiceConfigurationContext context)
@@ -42,8 +42,8 @@ public class UpdaterServerEntityFrameworkCoreModule : AbpModule
     {
         context.Services.AddAbpDbContext<UpdaterServerDbContext>(options =>
         {
-                /* Remove "includeAllEntities: true" to create
-                 * default repositories only for aggregate roots */
+            /* Remove "includeAllEntities: true" to create
+             * default repositories only for aggregate roots */
             options.AddDefaultRepositories(includeAllEntities: true);
         });
 
@@ -54,10 +54,32 @@ public class UpdaterServerEntityFrameworkCoreModule : AbpModule
 
         Configure<AbpDbContextOptions>(options =>
         {
-                /* The main point to change your DBMS.
-                 * See also UpdaterServerDbContextFactory for EF Core tooling. */
+            /* The main point to change your DBMS.
+             * See also UpdaterServerDbContextFactory for EF Core tooling. */
             options.UseNpgsql();
+            // options.UseNpgsql(opts =>
+            // {
+            //     opts.ConfigureDataSource(builder =>
+            //     {
+            //         if (!string.IsNullOrEmpty(builder.ConnectionStringBuilder.Password))
+            //         {
+            //             return;
+            //         }
+            //
+            //         builder.UsePeriodicPasswordProvider(async (_, ct) =>
+            //             {
+            //                 var credentials = new DefaultAzureCredential();
+            //                 var token = await credentials.GetTokenAsync(new TokenRequestContext([
+            //                         "https://ossrdbms-aad.database.windows.net/.default"
+            //                     ]),
+            //                     ct);
+            //
+            //                 return token.Token;
+            //             },
+            //             TimeSpan.FromHours(24),
+            //             TimeSpan.FromSeconds(10));
+            //     });
+            // });
         });
-        
     }
 }

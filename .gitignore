@@ -273,3 +273,10 @@ src/UpdaterServer.Blazor.Server.Tiered/Logs/*
 # IdentityServer temp files
 tempkey.rsa
 tempkey.jwk
+.azure
+
+**/template/
+**/aspirate-output/
+**/aspirate.json
+**/aspirate-state.json
+**/manifest.json

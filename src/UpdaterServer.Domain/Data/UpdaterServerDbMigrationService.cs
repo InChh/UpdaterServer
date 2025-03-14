@@ -64,29 +64,12 @@ public class UpdaterServerDbMigrationService : ITransientDependency
 
     private async Task SeedDataAsync()
     {
-        if (_hostEnvironment.IsDevelopment())
-        {
-            await _dataSeeder.SeedAsync(new DataSeedContext()
-                .WithProperty(IdentityDataSeedContributor.AdminUserNamePropertyName,
-                    UpdaterServerConsts.AdminUserNameDefaultValue)
-                .WithProperty(IdentityDataSeedContributor.AdminPasswordPropertyName,
-                    UpdaterServerConsts.AdminPasswordDefaultValue)
-            );
-        }
-        else
-        {
-            var password = Environment.GetEnvironmentVariable("ADMIN_PASSWORD") ??
-                           Guid.NewGuid().ToString("N").Truncate(12);
-
-            Logger.LogInformation("Initial admin username {}, password: {}",
-                UpdaterServerConsts.AdminUserNameDefaultValue, password);
-            await _dataSeeder.SeedAsync(new DataSeedContext()
-                .WithProperty(IdentityDataSeedContributor.AdminUserNamePropertyName,
-                    UpdaterServerConsts.AdminUserNameDefaultValue)
-                .WithProperty(IdentityDataSeedContributor.AdminPasswordPropertyName,
-                    password)
-            );
-        }
+        await _dataSeeder.SeedAsync(new DataSeedContext()
+            .WithProperty(IdentityDataSeedContributor.AdminUserNamePropertyName,
+                UpdaterServerConsts.AdminUserNameDefaultValue)
+            .WithProperty(IdentityDataSeedContributor.AdminPasswordPropertyName,
+                UpdaterServerConsts.AdminPasswordDefaultValue)
+        );
     }
 
     private bool AddInitialMigrationIfNotExist()

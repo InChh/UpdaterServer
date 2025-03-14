@@ -40,14 +40,14 @@ public class FileMetadataManager(
 
         // if file hash is the same, we need to ensure that the url is the same too so that 
         // in oss storage, we don't have multiple files with the same hash
-        if (fileMetadata.Url != url)
-        {
-            throw new BusinessException(FileMetadataErrorCodes.SameHashDifferentUrl)
-                .WithData("path", path)
-                .WithData("hash", hash)
-                .WithData("requestedUrl", url)
-                .WithData("existingUrl", fileMetadata.Url);
-        }
+        // if (fileMetadata.Url != url)
+        // {
+        //     throw new BusinessException(FileMetadataErrorCodes.SameHashDifferentUrl)
+        //         .WithData("path", path)
+        //         .WithData("hash", hash)
+        //         .WithData("requestedUrl", url)
+        //         .WithData("existingUrl", fileMetadata.Url);
+        // }
 
         return new FileMetadata(
             guidGenerator.Create(),
