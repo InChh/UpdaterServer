@@ -1,5 +1,4 @@
-﻿using System;
-using Volo.Abp;
+﻿using Volo.Abp;
 
 namespace UpdaterServer.ApplicationVersion;
 
@@ -15,20 +14,14 @@ public static class ApplicationVersionStringExtension
                 ApplicationVersionErrorCodes.VersionNumberInvalid).WithData("versionNumber", value);
         }
 
-        // The first number of version should be current year and the second number should be current month.
-        var year = DateTime.Now.Year.ToString();
-        var month = DateTime.Now.Month.ToString();
-        if (strings[0] != year || strings[1] != month)
+        // The numbers should be greater equal than 0.
+        foreach (var numberStr in strings)
         {
-            throw new BusinessException(
-                ApplicationVersionErrorCodes.VersionNumberInvalid).WithData("versionNumber", value);
-        }
-
-        // The third number should be greater than 0.
-        if (int.TryParse(strings[2], out var number) && number <= 0)
-        {
-            throw new BusinessException(
-                ApplicationVersionErrorCodes.VersionNumberInvalid).WithData("versionNumber", value);
+            if (int.TryParse(numberStr, out var number) && number < 0)
+            {
+                throw new BusinessException(
+                    ApplicationVersionErrorCodes.VersionNumberInvalid).WithData("versionNumber", value);
+            }
         }
     }
 }

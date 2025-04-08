@@ -67,7 +67,7 @@
 
   <ItemGroup>
     <Content Include="openiddict.pfx">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
     <Content Include="Pages\Account\index.css" />
   </ItemGroup>
